@@ -25,6 +25,17 @@ except urllib2.HTTPError, e:
 except urllib2.URLError, e:
     print e.reason
 
+list = []
+
+list.append('1')
+list.append('2')
+
+print list
+
+list.pop()
+
+print list
+
 
 
 
