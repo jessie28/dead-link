@@ -2,11 +2,14 @@
 import my_sql
 import HTMLParser
 import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 class UrlGet():
 
     def __init__(self):
         self.iscon = True
         self.new_lists = []
+        self.old_lists = []
         self.page = 0
         self.content_member_page = 0
         self.isempty = False
@@ -23,7 +26,7 @@ class UrlGet():
     def _get_content_by_sql(self):
         self.isempty = False
         self.page += 1
-        print self.page
+        print "sql_page: %d " % self.page
         limit = 2
         if self.page == 1:
             p = 0
@@ -64,8 +67,14 @@ class UrlGet():
         for content in content_list:
             list_tmp = {}
             # content[2].encode('utf-8')
-            txt_en = self.replace_html(content[1])
-            txt_zh = self.replace_html(content[2])
+            # txt_en = self.replace_html(content[1])
+            # txt_zh = self.replace_html(content[2])
+
+
+            html_parser = HTMLParser.HTMLParser()
+            txt_en = html_parser.unescape(content[1])
+            txt_zh = html_parser.unescape(content[2])
+
             list_tmp['content_id'] = content[0]
             # list_tmp['content_en'] = html_parser.unescape(txt_en)
             # list_tmp['content_zh'] = html_parser.unescape(txt_zh)
@@ -77,28 +86,41 @@ class UrlGet():
         html_parser = HTMLParser.HTMLParser()
         for content in content_list:
             list_tmp = {}
-            sidebar_en = self.replace_html(content[1])
-            sidebar_zh = self.replace_html(content[2])
+            html_parser = HTMLParser.HTMLParser()
+
+            # sidebar_en = self.replace_html(content[1])
+            # sidebar_zh = self.replace_html(content[2])
+
+            sidebar_en = html_parser.unescape(content[1])
+            sidebar_zh = html_parser.unescape(content[2])
+
             list_tmp['content_id'] = content[0]
-            list_tmp['content_en'] = html_parser.unescape(sidebar_en)
-            list_tmp['content_zh'] = html_parser.unescape(sidebar_zh)
+            list_tmp['content_en'] = sidebar_en
+            list_tmp['content_zh'] = sidebar_zh
             self.new_lists.append(list_tmp)
             list_tmp = {}
-            member_publications_en = self.replace_html(content[3])
-            member_publications_zh = self.replace_html(content[4])
+            # member_publications_en = self.replace_html(content[3])
+            # member_publications_zh = self.replace_html(content[4])
+            member_publications_en = html_parser.unescape(content[3])
+            member_publications_zh = html_parser.unescape(content[4])
             list_tmp['content_id'] = content[0]
-            list_tmp['content_en'] = html_parser.unescape(member_publications_en)
-            list_tmp['content_zh'] = html_parser.unescape(member_publications_zh)
+            list_tmp['content_en'] = member_publications_en
+            list_tmp['content_zh'] = member_publications_zh
             self.new_lists.append(list_tmp)
             list_tmp = {}
-            member_outteam_en = self.replace_html(content[5])
-            member_outteam_zh = self.replace_html(content[6])
+            # member_outteam_en = self.replace_html(content[5])
+            # member_outteam_zh = self.replace_html(content[6])
+            member_outteam_en = html_parser.unescape(content[5])
+            member_outteam_zh = html_parser.unescape(content[6])
             list_tmp['content_id'] = content[0]
-            list_tmp['content_en'] = html_parser.unescape(member_outteam_en)
-            list_tmp['content_zh'] = html_parser.unescape(member_outteam_zh)
+            list_tmp['content_en'] = member_outteam_en
+            list_tmp['content_zh'] = member_outteam_zh
             self.new_lists.append(list_tmp)
 
+
+
     def haveContentArr(self):
+        print self.new_lists
         return len(self.new_lists) != 0
 
 
@@ -106,6 +128,7 @@ class UrlGet():
     def add_content_list(self):
 
         content_list = self._get_content_by_sql()
+        print 'sqldata_nums : %d'% len(content_list)
         if len(content_list) > 0 :
             if self.is_content == True:
                 self.getContent(content_list)
@@ -115,10 +138,30 @@ class UrlGet():
 
 
 
-
-
-
-
     def get_new_list(self):
-        new_list = self.new_lists.pop()
+        new_list = self._judge_list()
         return new_list
+
+    def _judge_list(self):
+        if self.haveContentArr():
+            list = self.new_lists.pop()
+            if list in self.old_lists :
+                self._judge_list()
+            else:
+                self.old_lists.append(list)
+        else :
+            list = {}
+        return list
+
+    def test(self):
+        list = self._get_content_by_sql()
+        print list[0]
+        html_parser = HTMLParser.HTMLParser()
+        title = list[0][2]
+        new = html_parser.unescape(title)
+        print new
+
+if __name__ == '__main__':
+
+    getdata = UrlGet()
+    getdata.test()
